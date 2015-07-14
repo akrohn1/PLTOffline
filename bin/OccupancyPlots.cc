@@ -108,13 +108,29 @@ int OccupancyPlots (std::string const DataFileName)
   std::map<int, TCanvas*> cMeanMap;
 
 
-
-
+  //ALEX: Counters to track # events w/o triple hit, # empty events, and # nonempty events, respectively.
+  int countz = 0, countx = 0, county = 0;
   // char buffer for writing names
   char BUFF[200];
   // Loop over all events in file
-  for (int ientry = 0; Event.GetNextEvent() >= 0; ++ientry) {
-    if (ientry % 1 == 0) {
+  for (int ientry = 0; ((Event.GetNextEvent() >= 0)&&(ientry < 10000000)); ++ientry){
+    //ALEX: General purpose flag used below to control what's being weeded out, in this case empty events and events WITH at least one triple coincidence in at least one telescope
+    int flag = 0;
+    if(Event.NTelescopes()==0){
+	countx++;
+	flag = 1;
+    }
+    else if(Event.NTelescopes()>0){
+	county++;}
+    for(size_t counter = 0; counter < Event.NTelescopes(); counter++){
+	PLTTelescope* Tele = Event.Telescope(counter);
+	if(Tele->NHitPlanes() == 3){
+		flag=1;
+	}
+    }
+    if(flag == 0){
+    countz++;
+    if (ientry % 1000 == 0) {
       std::cout << "Processing event: " << ientry << std::endl;
     }
 
@@ -269,7 +285,7 @@ int OccupancyPlots (std::string const DataFileName)
       if(phit==0x7) hCoincidenceMap[Tele->Channel()]->Fill(6); //All planes in coincidence
     }
   }
-
+}
   std::cout << "Done reading events.  Will make some plots now" << std::endl;
 
   // Loop over all histograms and draw them on the correct canvas in the correct pad
@@ -438,32 +454,32 @@ f->Write();
     delete it->second;
   }
   for (std::map<int, TCanvas*>::iterator it = cOccupancyClMap.begin(); it != cOccupancyClMap.end(); ++it) {
-    it->second->SaveAs(TString::Format("plots/Occupancy_Clusters_Ch%02i.gif", it->first));
+//    it->second->SaveAs(TString::Format("plots/Occupancy_Clusters_Ch%02i.gif", it->first));
     delete it->second;
   }
   for (std::map<int, TCanvas*>::iterator it = cQuantileMap.begin(); it != cQuantileMap.end(); ++it) {
-    it->second->SaveAs(TString::Format("plots/Occupancy_Quantile_Ch%02i.gif", it->first));
+//    it->second->SaveAs(TString::Format("plots/Occupancy_Quantile_Ch%02i.gif", it->first));
     delete it->second;
   }
   for (std::map<int, TCanvas*>::iterator it = cProjectionMap.begin(); it != cProjectionMap.end(); ++it) {
-    it->second->SaveAs(TString::Format("plots/Occupancy_Projection_Ch%02i.gif", it->first));
+//    it->second->SaveAs(TString::Format("plots/Occupancy_Projection_Ch%02i.gif", it->first));
     delete it->second;
   }
   for (std::map<int, TCanvas*>::iterator it = cEfficiencyMap.begin(); it != cEfficiencyMap.end(); ++it) {
-    it->second->SaveAs(TString::Format("plots/Occupancy_Efficiency_Ch%02i.gif", it->first));
+//    it->second->SaveAs(TString::Format("plots/Occupancy_Efficiency_Ch%02i.gif", it->first));
     delete it->second;
   }
   for (std::map<int, TCanvas*>::iterator it = cCoincidenceMap.begin(); it != cCoincidenceMap.end(); ++it) {
     it->second->SaveAs(TString::Format("plots/Occupancy_Coincidence_Ch%02i.gif", it->first));
   }
   for (std::map<int, TCanvas*>::iterator it = cAllMap.begin(); it != cAllMap.end(); ++it) {
-    it->second->SaveAs(TString::Format("plots/Occupancy_All_Ch%02i.gif", it->first));
+//    it->second->SaveAs(TString::Format("plots/Occupancy_All_Ch%02i.gif", it->first));
     delete it->second;
   }
-
+  std::cout<<std::endl<<"Empty Events: "<<countx<<" / "<<countx + county<<std::endl<<"Non-Empty Events: "<<county<<" / "<<countx + county<<std::endl<<"Events With No Triple Coincidence: "<<countz<<" / "<<countx + county<<std::endl;
   return 0;
 }
-
+//findhere
 
 int main (int argc, char* argv[])
 {
